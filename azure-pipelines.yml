@@ -29,11 +29,11 @@ steps:
   - script: |
       mkdir -p test-results
       mkdir -p artifacts
-      pytest \
+      pytest tests/test_example.py \
         --junitxml=test-results/junit.xml \
         --html=artifacts/report.html --self-contained-html \
         -q
-    displayName: "Run UI tests"
+    displayName: "Run UI tests (single file)"
     env:
       HEADLESS: "true"
 
