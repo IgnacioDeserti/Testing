@@ -1,0 +1,54 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: "ubuntu-latest"
+
+steps:
+  - checkout: self
+    clean: true
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: "3.11"
+      addToPath: true
+    displayName: "Use Python 3.11"
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+    displayName: "Install dependencies"
+
+  - script: |
+      mkdir -p test-results
+      mkdir -p artifacts
+      pytest \
+        --junitxml=test-results/junit.xml \
+        --html=artifacts/report.html --self-contained-html \
+        -q
+    displayName: "Run UI tests"
+    env:
+      HEADLESS: "true"
+
+  - task: PublishTestResults@2
+    displayName: "Publish JUnit results"
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: "JUnit"
+      testResultsFiles: "test-results/junit.xml"
+      failTaskOnFailedTests: true
+      testRunTitle: "Basic Selenium Suite"
+
+  - task: PublishPipelineArtifact@1
+    displayName: "Publish HTML report"
+    condition: succeededOrFailed()
+    inputs:
+      targetPath: "artifacts"
+      artifactName: "ui-report"
